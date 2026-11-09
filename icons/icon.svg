@@ -1,17 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512"><defs>
-<linearGradient id="g" gradientUnits="userSpaceOnUse" x1="122" y1="0" x2="390" y2="0"><stop offset="0" stop-color="#8b2cf5"/><stop offset=".55" stop-color="#f2367d"/><stop offset="1" stop-color="#ffa24a"/></linearGradient>
-<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2131"/><stop offset="1" stop-color="#120e15"/></linearGradient>
-<radialGradient id="glow"><stop offset="0" stop-color="#ff3b47" stop-opacity=".55"/><stop offset="1" stop-color="#ff3b47" stop-opacity="0"/></radialGradient>
+<linearGradient id="g" gradientUnits="userSpaceOnUse" x1="118" y1="0" x2="352" y2="0">
+  <stop offset="0" stop-color="#18d2ff"/><stop offset=".5" stop-color="#2af598"/><stop offset="1" stop-color="#d4ff7a"/></linearGradient>
+<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#16121b"/><stop offset="1" stop-color="#060508"/></linearGradient>
+<radialGradient id="glow"><stop offset=".45" stop-color="#ff2d3d" stop-opacity=".45"/><stop offset="1" stop-color="#ff2d3d" stop-opacity="0"/></radialGradient>
+<radialGradient id="dot" cx=".38" cy=".34" r=".75"><stop offset="0" stop-color="#ff5a63"/><stop offset="1" stop-color="#e3121f"/></radialGradient>
 </defs>
 <rect x="50" y="50" width="412" height="412" rx="93" fill="url(#bg)"/>
-<rect x="50.5" y="50.5" width="411" height="411" rx="92.5" fill="none" stroke="#ffffff" stroke-opacity=".08"/>
-<rect x="128.2" y="242.6" width="21.0" height="58.8" rx="10.5" fill="url(#g)"/>
-<rect x="161.8" y="221.0" width="21.0" height="101.9" rx="10.5" fill="url(#g)"/>
-<rect x="195.2" y="193.6" width="21.0" height="156.8" rx="10.5" fill="url(#g)"/>
-<rect x="228.8" y="174.0" width="21.0" height="196.0" rx="10.5" fill="url(#g)"/>
-<rect x="262.2" y="203.4" width="21.0" height="137.2" rx="10.5" fill="url(#g)"/>
-<rect x="295.8" y="181.8" width="21.0" height="180.3" rx="10.5" fill="url(#g)"/>
-<rect x="329.2" y="215.2" width="21.0" height="113.7" rx="10.5" fill="url(#g)"/>
-<rect x="362.8" y="236.7" width="21.0" height="70.6" rx="10.5" fill="url(#g)"/>
-<circle cx="368" cy="140" r="34" fill="url(#glow)"/><circle cx="368" cy="140" r="15" fill="#e8283a"/>
+<rect x="50.5" y="50.5" width="411" height="411" rx="92.5" fill="none" stroke="#ffffff" stroke-opacity=".10"/>
+<rect x="121.8" y="254.4" width="22.0" height="67.2" rx="11.0" fill="url(#g)"/>
+<rect x="151.2" y="230.2" width="22.0" height="115.5" rx="11.0" fill="url(#g)"/>
+<rect x="180.8" y="201.9" width="22.0" height="172.2" rx="11.0" fill="url(#g)"/>
+<rect x="210.2" y="183.0" width="22.0" height="210.0" rx="11.0" fill="url(#g)"/>
+<rect x="239.8" y="214.5" width="22.0" height="147.0" rx="11.0" fill="url(#g)"/>
+<rect x="269.2" y="191.4" width="22.0" height="193.2" rx="11.0" fill="url(#g)"/>
+<rect x="298.8" y="227.1" width="22.0" height="121.8" rx="11.0" fill="url(#g)"/>
+<rect x="328.2" y="250.2" width="22.0" height="75.6" rx="11.0" fill="url(#g)"/>
+<circle cx="372" cy="142" r="51.3" fill="url(#glow)"/>
+<circle cx="372" cy="142" r="35.6" fill="none" stroke="#ffffff" stroke-opacity=".9" stroke-width="4.3"/>
+<circle cx="372" cy="142" r="27" fill="url(#dot)"/>
 </svg>

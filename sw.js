@@ -1,5 +1,5 @@
 /* Sprechpost – Offline-Speicher. Version ergibt sich aus dem Inhalt der Dateien. */
-const CACHE = 'sprechpost-a8a3888188';
+const CACHE = 'sprechpost-4deac8947c';
 const ASSETS = [
   "./",
   "index.html",
@@ -26,10 +26,11 @@ const ASSETS = [
   "fonts/schibsted-grotesk-latin-ext-700-normal.woff2",
   "fonts/schibsted-grotesk-latin-ext-800-normal.woff2",
   "fonts/schibsted-grotesk-latin-ext-900-normal.woff2",
-  "icons/icon-192.png",
-  "icons/icon-512.png",
-  "icons/icon-maskable-512.png",
-  "icons/apple-touch-icon.png"
+  "icons/icon-v2-192.png",
+  "icons/icon-v2-512.png",
+  "icons/icon-v2-maskable-512.png",
+  "icons/apple-touch-icon-v2.png",
+  "icons/favicon.svg"
 ];
 
 self.addEventListener('install', (e) => {
