@@ -20,7 +20,9 @@ Deinstallieren: in der App oben rechts auf das Drei-Punkte-Menü → „Sprechpo
 4. **Einsprechen** mit dem Teleprompter. Er zeigt den Text Satz für Satz. Am Ende jedes Satzes drückst du die Leertaste oder tippst auf den Bildschirm. So wissen die Untertitel, wann der nächste Satz beginnt. Alternativ lädst du eine fertige Audiodatei und taktest danach.
 5. **Video erstellen** und speichern. Optional zusätzlich die Untertitel als SRT-Datei.
 
-Satzgrenzen lassen sich nachträglich in der Zeitleiste unter der Vorschau verschieben.
+Satzgrenzen lassen sich nachträglich in der Zeitleiste unter der Vorschau verschieben (Maus, oder Umschalt + Pfeiltasten).
+
+Das Geräusch der Leertaste oder des Klicks am Satzende senkt die App in der Aufnahme automatisch ab, solange an der Stelle nicht gesprochen wird.
 
 ## Barrierearm posten
 

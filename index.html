@@ -135,7 +135,9 @@ textarea { min-height: 170px; resize: vertical; }
 .btn.rec::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: #fff; }
 .btn.big { min-height: 48px; font-size: 16px; padding: 10px 20px; }
 .btn.small { min-height: 34px; padding: 5px 11px; font-size: 13px; }
-.btn input[type="file"] { display: none; }
+.btn { position: relative; }
+.btn input[type="file"] { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; clip-path: inset(50%); }
+.btn:has(input[type="file"]:focus-visible) { outline: 2px solid var(--focus); outline-offset: 2px; }
 
 input[type="range"] { width: 100%; accent-color: var(--accent); }
 .range-row { display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 10px; }
@@ -245,7 +247,7 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
           <button class="play" id="playBtn" type="button" aria-label="Abspielen" disabled>
             <svg viewBox="0 0 24 24" id="playIcon"><path d="M7 4.5v15l13-7.5z"/></svg>
           </button>
-          <canvas id="timeline" aria-label="Zeitleiste. Klicken springt, Striche verschieben Satzgrenzen." tabindex="0"></canvas>
+          <canvas id="timeline" aria-label="Zeitleiste. Pfeiltasten springen eine Sekunde. Umschalt und Pfeiltaste verschieben die nächstgelegene Satzgrenze." tabindex="0"></canvas>
         </div>
         <div class="row" style="justify-content: space-between;">
           <span class="clock" id="clock">00:00.0 / 00:00.0</span>
@@ -403,7 +405,7 @@ const $ = (s) => document.querySelector(s);
 const SIZE = 1080, FPS = 30, NB = 32;
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-const nextFrame = () => new Promise(r => requestAnimationFrame(() => r()));
+const nextFrame = () => new Promise(r => { const t = setTimeout(r, 80); requestAnimationFrame(() => { clearTimeout(t); r(); }); });
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const SAMPLE = `Meine Posts gibt es ab heute auch zum Anhören.
@@ -436,8 +438,8 @@ const LAYOUTS = { unten: 'unter dem Text', oben: 'oben im Bild' };
 /* ---------- Einstellungen (nur lokal im Browser gespeichert) ---------- */
 const KEY = 'sprechpost:v1', KEY_PHOTO = 'sprechpost:photo';
 const defaults = {
-  text: SAMPLE, sample: true, wave: 'balken', palette: 'abendrot', font: 'grotesk', size: 'M',
-  subStyle: 'box', layout: 'unten', name: '', progress: true, kenburns: true, burn: true, v: 2,
+  text: SAMPLE, sample: true, wave: 'balken', palette: 'mint', font: 'grotesk', size: 'M',
+  subStyle: 'box', layout: 'oben', name: '', progress: true, kenburns: true, burn: true, v: 3,
   zoom: 1, fx: 0.5, fy: 0.5, offset: 0,
 };
 let settings = { ...defaults };
@@ -445,7 +447,8 @@ try {
   const s = JSON.parse(localStorage.getItem(KEY) || 'null');
   if (s && typeof s === 'object') {
     settings = { ...defaults, ...s, offset: 0 };
-    if (!(s.v >= 2)) Object.assign(settings, { wave: 'balken', size: 'M', subStyle: 'box', v: 2 });
+    if (!(s.v >= 2)) Object.assign(settings, { wave: 'balken', size: 'M', subStyle: 'box' });
+    if (!(s.v >= 3)) Object.assign(settings, { palette: 'mint', layout: 'oben', v: 3 });
   }
 } catch (e) {}
 let saveTimer = 0;
@@ -515,7 +518,26 @@ function cleanText(t) {
     .trim();
 }
 
-const ABBR_END = /(?:^|[\s(])(?:\p{L}|bzw|ca|dr|prof|nr|usw|etc|inkl|evtl|ggf|vgl|bspw|sog|mio|mrd|hr|fr|st|str|zzgl|bzgl|insb|abs|tel|jh|max|min|std|vs|ebd|gem|ausg|bd|kap|mrs|mr|zb|sa|so)\.$|(?:^|\s)\d{1,2}\.$/iu;
+// Abkürzungen, nach denen (fast) nie ein Satz endet
+const ABBR_STRONG = /(?:^|[\s(])(?:bzw|ca|dr|prof|nr|inkl|evtl|ggf|vgl|bspw|sog|zzgl|bzgl|insb|mio|mrd|hr|fr|st|tel|vs|mrs|mr)\.$/iu;
+const ABBR_LETTER = /(?:^|[\s(])\p{Ll}\.$|(?:^|[\s(])\p{L}\.\s?\p{L}\.$/u;        // „z.“, „z. B.“, „d. h.“
+// Abkürzungen, nach denen ein Satz enden kann: nur zusammenhalten, wenn es klein weitergeht
+const ABBR_WEAK = /(?:^|[\s(])(?:usw|etc|max|min|std|abs|str|kap|bd|jh|\p{Lu})\.$/iu;
+const NUM_END = /(?:^|\s)\d{1,2}\.$/u;
+const ORDINAL_BEFORE = /(?:^|[\s(])(?:am|im|der|die|das|den|dem|des|zum|zur|vom|ab|bis|seit|beim|jede[nrms]?|(?:unser|mein|dein|sein|ihr|ein|kein|dies)\p{Ll}*),?\s+\d{1,2}\.$/iu;
+const MONTH = /^(?:Januar|Februar|März|April|Mai|Juni|Juli|August|September|Oktober|November|Dezember|Jan|Feb|Mär|Apr|Jun|Jul|Aug|Sep|Sept|Okt|Nov|Dez)\b/u;
+
+function keepTogether(tr, nextRaw) {
+  if (!/\.$/.test(tr)) return false;
+  if (/^[\p{L}\p{N}]/u.test(nextRaw)) return true;               // ohne Leerzeichen: „2.0“, „beispiel.de“, „z.B.“
+  const next = nextRaw.trim();
+  if (!next) return false;
+  if (ABBR_STRONG.test(tr) || ABBR_LETTER.test(tr)) return true;
+  const lower = /^[\p{Ll}\p{N}]/u.test(next);
+  if (NUM_END.test(tr)) return lower || MONTH.test(next) || ORDINAL_BEFORE.test(tr);
+  if (ABBR_WEAK.test(tr)) return lower || /^\p{Lu}\./u.test(next);  // Initialen „J. R. R.“
+  return false;
+}
 
 function splitSegments(text) {
   const lines = text.replace(/\r/g, '').split('\n')
@@ -525,11 +547,11 @@ function splitSegments(text) {
   for (const line of lines) {
     const pieces = line.match(/[^.!?…]+(?:[.!?…]+["“”'»«)\]]*)?|[.!?…]+/g) || [line];
     let buf = '';
-    for (const p of pieces) {
-      buf += p;
+    for (let i = 0; i < pieces.length; i++) {
+      buf += pieces[i];
       const tr = buf.trim();
       if (!tr) { buf = ''; continue; }
-      if (ABBR_END.test(tr)) continue;           // „z. B.“, „1.“ usw. nicht trennen
+      if (i < pieces.length - 1 && keepTogether(tr, pieces[i + 1])) continue;
       segs.push(tr); buf = '';
     }
     if (buf.trim()) segs.push(buf.trim());
@@ -1081,13 +1103,19 @@ tl.addEventListener('pointermove', (e) => {
   S.bounds[i] = clamp(s, S.bounds[i - 1] + 0.12, S.bounds[i + 1] - 0.12);
   dirty = true;
 });
-const endDrag = () => { if (drag && drag.i) toast('Satzgrenze verschoben.'); drag = null; dirty = true; };
+const endDrag = () => { if (drag && drag.i) { toast('Satzgrenze verschoben.'); invalidateExport(); } drag = null; dirty = true; };
 tl.addEventListener('pointerup', endDrag);
 tl.addEventListener('pointercancel', endDrag);
 tl.addEventListener('keydown', (e) => {
   if (!S.audio) return;
-  if (e.key === 'ArrowRight') { seek(curTime() + 1); e.preventDefault(); }
-  if (e.key === 'ArrowLeft') { seek(curTime() - 1); e.preventDefault(); }
+  const dir = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+  if (dir && e.shiftKey && S.bounds.length > 2) {
+    const t = curTime(); let i = 1;
+    for (let k = 2; k < S.bounds.length - 1; k++) if (Math.abs(S.bounds[k] - t) < Math.abs(S.bounds[i] - t)) i = k;
+    S.bounds[i] = clamp(S.bounds[i] + dir * 0.1, S.bounds[i - 1] + 0.12, S.bounds[i + 1] - 0.12);
+    invalidateExport(); dirty = true; e.preventDefault(); return;
+  }
+  if (dir) { seek(curTime() + dir); e.preventDefault(); }
   if (e.key === ' ') { togglePlay(); e.preventDefault(); }
 });
 
@@ -1285,8 +1313,8 @@ async function openPrompter(mode) {
   if (!S.segments.length) { toast('Bitte zuerst den Text deines Posts einfügen.'); textEl.focus(); return; }
   if (S.exporting) return;
   stopPlayback();
-  Object.assign(P, { mode, phase: 'ready', marks: [], idx: 0, chunks: [] });
-  pr.hidden = false; document.body.style.overflow = 'hidden';
+  Object.assign(P, { mode, phase: 'ready', marks: [], taps: [], idx: 0, chunks: [] });
+  pr.hidden = false; document.body.style.overflow = 'hidden'; $('.wrap').inert = true;
   document.activeElement?.blur(); pr.focus();
   $('#prLamp').classList.toggle('tap', mode === 'tap');
   $('#prMsg').textContent = '';
@@ -1311,6 +1339,7 @@ async function openPrompter(mode) {
     P.source.connect(P.analyser); P.source.connect(P.proc); P.proc.connect(P.mute); P.mute.connect(c.destination);
     P.proc.onaudioprocess = (e) => { if (P.phase === 'run' || P.phase === 'done') P.chunks.push(new Float32Array(e.inputBuffer.getChannelData(0))); };
     $('#prMsg').textContent = 'Mikrofon ist bereit. Sprich kurz etwas: Die Animation oben sollte ausschlagen.';
+    renderPrompter();
   } else {
     $('#prMsg').textContent = 'Deine Aufnahme läuft gleich ab. Drück am Ende jedes Satzes die Leertaste.';
   }
@@ -1329,8 +1358,9 @@ function renderPrompter() {
   $('#prLamp').classList.toggle('live', live);
   $('#prState').textContent = P.phase === 'done' ? 'FERTIG' : live ? (P.mode === 'tap' ? 'TAKTEN' : 'AUFNAHME') : (P.phase === 'count' ? 'GLEICH …' : 'BEREIT');
   const main = $('#prMain');
-  main.disabled = P.phase === 'count' || P.phase === 'done';
-  main.textContent = P.phase === 'ready' ? (P.mode === 'tap' ? 'Abspielen und takten' : 'Aufnahme starten')
+  const micWait = P.mode === 'record' && P.phase === 'ready' && !P.proc;
+  main.disabled = P.phase === 'count' || P.phase === 'done' || micWait;
+  main.textContent = micWait ? 'Warte auf Mikrofon …' : P.phase === 'ready' ? (P.mode === 'tap' ? 'Abspielen und takten' : 'Aufnahme starten')
     : P.phase === 'run' ? (P.idx >= n - 1 ? 'Fertig' : 'Satz fertig') : P.phase === 'done' ? 'Wird verarbeitet …' : '…';
   $('#prBack').disabled = !(P.phase === 'run' && P.idx > 0);
   $('#prStop').disabled = P.phase !== 'run';
@@ -1378,16 +1408,19 @@ async function startTake() {
   }
   P.phase = 'run'; renderPrompter();
 }
+function noteTap() { if (P.phase === 'run' && P.mode === 'record') P.taps.push(actx.currentTime - P.startAt); }
 function mark() {
-  if (P.phase === 'ready') { startTake(); return; }
+  if (P.phase === 'ready') { if (P.mode === 'record' && !P.proc) return; startTake(); return; }
   if (P.phase !== 'run') return;
   const t = actx.currentTime - P.startAt, n = S.segments.length;
+  noteTap();
   P.marks.push(t);
   if (P.idx < n - 1) { P.idx++; renderPrompter(); return; }
   P.phase = 'done'; renderPrompter();
   P.stopTimer = setTimeout(finishTake, P.mode === 'record' ? 900 : 50);
 }
 function undoMark() {
+  noteTap();
   if (P.phase !== 'run' || P.idx === 0) return;
   P.marks.pop(); P.idx--; renderPrompter();
 }
@@ -1405,13 +1438,13 @@ function closePrompter() {
   P.wakeLock = null; P.phase = 'closed';
   cancelAnimationFrame(P.raf);
   $('#prBig').hidden = true; $('#prMain').disabled = false;
-  pr.hidden = true; document.body.style.overflow = '';
+  pr.hidden = true; document.body.style.overflow = ''; $('.wrap').inert = false;
 }
 async function finishTake() {
   if (P.phase === 'closed') return;
   clearTimeout(P.stopTimer);
   P.phase = 'done'; renderPrompter();
-  const mode = P.mode, marks = P.marks.slice(), chunks = P.chunks;
+  const mode = P.mode, marks = P.marks.slice(), taps = (P.taps || []).slice(), chunks = P.chunks;
   const sr = actx.sampleRate;
   closePrompter();
   if (mode === 'tap') {
@@ -1425,6 +1458,7 @@ async function finishTake() {
   if (len < sr * 0.5) { toast('Die Aufnahme war zu kurz. Bitte noch einmal.'); return; }
   const raw = new Float32Array(len); let o = 0;
   for (const c of chunks) { raw.set(c, o); o += c.length; }
+  duckTaps(raw, sr, taps);
   const sp = detectSpeech(raw, sr);
   const rawDur = len / sr;
   const t0 = Math.max(0, sp.start - 0.3);
@@ -1447,6 +1481,28 @@ async function finishTake() {
   const tapped = Math.min(marks.length, S.segments.length);
   toast(tapped >= S.segments.length - 1 ? 'Aufnahme fertig. Schau dir die Vorschau an.' : 'Aufnahme fertig. Nicht getaktete Sätze wurden nach Textlänge verteilt.', 5200);
 }
+/* Tasten- und Klickgeräusche an den Tipp-Zeitpunkten absenken – nur dort, wo gerade nicht gesprochen wird */
+function duckTaps(x, sr, taps) {
+  const win = Math.floor(sr * 0.02), n = Math.floor(x.length / win);
+  if (!n || !taps.length) return 0;
+  const r = new Float32Array(n);
+  for (let w = 0; w < n; w++) { let e = 0; for (let i = w * win; i < (w + 1) * win; i++) e += x[i] * x[i]; r[w] = Math.sqrt(e / win); }
+  const ref = Float32Array.from(r).sort()[Math.floor(0.9 * (n - 1))];   // typische Sprechlautstärke
+  if (ref < 1e-4) return 0;
+  const fade = Math.floor(sr * 0.012);
+  let done = 0;
+  for (const t of taps) {
+    const a = Math.max(0, Math.floor((t - 0.06) * sr)), b = Math.min(x.length, Math.floor((t + 0.30) * sr));
+    if (b - a < fade * 2) continue;
+    const fa = Math.floor(a / win), fb = Math.min(n, Math.ceil(b / win));
+    let loud = 0;
+    for (let f = fa; f < fb; f++) if (r[f] > ref * 0.3) loud++;
+    if (loud > (fb - fa) * 0.45) continue;                               // hier wird gesprochen: nichts anfassen
+    for (let i = a; i < b; i++) { const edge = Math.min(i - a, b - 1 - i); x[i] *= 1 - 0.94 * Math.min(1, edge / fade); }
+    done++;
+  }
+  return done;
+}
 function detectSpeech(x, sr) {
   const win = Math.floor(sr * 0.02), n = Math.floor(x.length / win);
   const r = new Float32Array(n); let peak = 0;
@@ -1461,7 +1517,7 @@ function detectSpeech(x, sr) {
 const refocus = (e) => { e.currentTarget.blur(); pr.focus(); };
 $('#prMain').addEventListener('click', (e) => { refocus(e); mark(); });
 $('#prBack').addEventListener('click', (e) => { refocus(e); undoMark(); });
-$('#prStop').addEventListener('click', (e) => { refocus(e); if (P.phase === 'run') finishTake(); });
+$('#prStop').addEventListener('click', (e) => { refocus(e); if (P.phase === 'run') { noteTap(); finishTake(); } });
 $('#prCancel').addEventListener('click', () => { closePrompter(); toast('Abgebrochen. Nichts wurde geändert.'); });
 $('#prStage').addEventListener('pointerdown', (e) => { if (e.button === 0) mark(); });
 document.addEventListener('keydown', (e) => {
@@ -1476,7 +1532,7 @@ document.addEventListener('keydown', (e) => {
     e.preventDefault(); undoMark();
   } else if (e.key === 'Escape') {
     e.preventDefault();
-    if (P.phase === 'run') finishTake(); else { closePrompter(); }
+    if (P.phase === 'run') { noteTap(); finishTake(); } else { closePrompter(); }
   }
 }, true);
 

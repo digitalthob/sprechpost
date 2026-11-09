@@ -1,5 +1,5 @@
 /* Sprechpost – Offline-Speicher. Version ergibt sich aus dem Inhalt der Dateien. */
-const CACHE = 'sprechpost-4deac8947c';
+const CACHE = 'sprechpost-6ad1fa3358';
 const ASSETS = [
   "./",
   "index.html",
