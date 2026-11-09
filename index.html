@@ -7,6 +7,11 @@
 <meta name="description" content="Foto, Stimme und Text werden zu einem quadratischen Video mit Sound-Animation und Untertiteln – für LinkedIn. Läuft komplett im Browser.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='9' fill='%23dc2430'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="fonts/fonts.css">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Sprechpost">
+<meta name="theme-color" content="#f4f2f6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121014" media="(prefers-color-scheme: dark)">
 <style>
 /* Layout: Sendestudio – Monitor links (bleibt stehen), Steuerpult rechts in fünf Stationen; Teleprompter als dunkle Vollbild-Kabine */
 :root {
@@ -170,6 +175,7 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
 .result { display: grid; gap: 10px; }
 .result video { width: 100%; max-width: 360px; aspect-ratio: 1 / 1; border-radius: 8px; background: #000; }
 
+.install { margin-left: auto; align-self: center; }
 .foot { display: flex; flex-wrap: wrap; gap: 6px 18px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
 .foot a { color: var(--ink); text-underline-offset: 2px; }
 .toast {
@@ -222,6 +228,7 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
   <header class="top">
     <h1 class="brand"><span class="lamp" aria-hidden="true"></span>Sprechpost</h1>
     <p>Foto, Stimme und Text werden zu einem quadratischen Video für LinkedIn. Alles bleibt auf deinem Rechner.</p>
+    <button class="btn small install" id="installBtn" type="button" hidden>Als App installieren</button>
   </header>
 
   <main class="studio">
@@ -1760,6 +1767,21 @@ function init() {
   requestAnimationFrame(loop);
 }
 init();
+
+/* Installierbare Web-App */
+let installEvt = null;
+window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEvt = e; $('#installBtn').hidden = false; });
+$('#installBtn').addEventListener('click', async () => {
+  if (!installEvt) return;
+  installEvt.prompt();
+  const r = await installEvt.userChoice;
+  installEvt = null; $('#installBtn').hidden = true;
+  if (r.outcome === 'accepted') toast('Sprechpost wird installiert und öffnet sich gleich in einem eigenen Fenster.');
+});
+window.addEventListener('appinstalled', () => { $('#installBtn').hidden = true; });
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+}
 </script>
 </body>
 </html>

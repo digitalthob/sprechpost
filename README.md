@@ -6,6 +6,12 @@ Aus einem Foto, deiner Stimme und deinem Post-Text wird ein quadratisches Video 
 
 Alles passiert im Browser. Foto, Aufnahme und Video verlassen deinen Rechner nicht.
 
+## Als App installieren
+
+In **Chrome oder Edge** die Seite öffnen und oben rechts auf „Als App installieren“ klicken (oder auf das Installieren-Symbol in der Adressleiste). Sprechpost öffnet sich dann in einem eigenen Fenster und liegt wie jede andere App im Programme-Ordner, im Dock und im Launchpad (Mac) bzw. im Startmenü (Windows). Die App startet auch ohne Internet und holt sich Updates automatisch, sobald du online bist.
+
+Deinstallieren: in der App oben rechts auf das Drei-Punkte-Menü → „Sprechpost deinstallieren“.
+
 ## So geht's
 
 1. **Foto** auf die Vorschau ziehen, Ausschnitt mit der Maus verschieben, bei Bedarf zoomen.
@@ -30,6 +36,7 @@ Am besten in **Chrome oder Edge** (Desktop). Dort entsteht das MP4 in wenigen Se
 ## Datenschutz
 
 - Keine Uploads, kein Tracking, keine externen Dienste. Auch die Schriften liegen in diesem Repository.
+- Damit die App offline startet, legt der Browser die Programmdateien (nicht deine Inhalte) in seinem Zwischenspeicher ab.
 - Deine Einstellungen, der Text und das zuletzt gewählte Foto (verkleinert) werden im lokalen Speicher deines Browsers abgelegt, damit sie beim nächsten Öffnen noch da sind. Löschen: Website-Daten für diese Seite im Browser entfernen.
 - Die Aufnahme wird nicht gespeichert. Exportiere dein Video, bevor du die Seite schließt.
 
@@ -38,9 +45,12 @@ Am besten in **Chrome oder Edge** (Desktop). Dort entsteht das MP4 in wenigen Se
 Eine einzige HTML-Seite ohne Build-Schritt. Web Audio für Aufnahme und Spektralanalyse, Canvas für das Bild, WebCodecs für H.264/AAC und [mp4-muxer](https://github.com/Vanilagy/mp4-muxer) für die MP4-Datei. Als Rückfallebene dient MediaRecorder.
 
 ```
-index.html          die App
-vendor/mp4-muxer.js MP4-Container (MIT)
-fonts/              Schriften, selbst gehostet (SIL OFL 1.1)
+index.html            die App
+manifest.webmanifest  Angaben für die Installation als App
+sw.js                 Offline-Speicher (Service Worker)
+icons/                App-Symbole
+vendor/mp4-muxer.js   MP4-Container (MIT)
+fonts/                Schriften, selbst gehostet (SIL OFL 1.1)
 ```
 
 ## Lizenz
