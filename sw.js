@@ -52,7 +52,7 @@ self.addEventListener('fetch', (e) => {
   // Seite selbst: erst Netz (damit Updates sofort da sind), offline aus dem Speicher
   if (req.mode === 'navigate') {
     e.respondWith(
-      fetch(req)
+      fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' })   // am Browser-Zwischenspeicher vorbei nachfragen
         .then((res) => { if (res.ok) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put('./', copy)); } return res; })
         .catch(() => caches.match('./'))
     );
