@@ -24,6 +24,10 @@ Satzgrenzen lassen sich nachträglich in der Zeitleiste unter der Vorschau versc
 
 Das Geräusch der Leertaste oder des Klicks am Satzende senkt die App in der Aufnahme automatisch ab, solange an der Stelle nicht gesprochen wird.
 
+**Pausen kürzen:** Pausen über einer Sekunde werden automatisch auf eine halbe Sekunde gekürzt (abschaltbar in Schritt 4). Die Untertitel wandern mit.
+
+**Tempo:** Unter der Zeitleiste lässt sich das Tempo auf 1,1×, 1,2×, 1,25× oder 1,5× stellen. Die Stimme wird schneller, aber nicht höher. Vorschau, Video und SRT-Datei nutzen das gewählte Tempo. Beides lässt sich jederzeit umstellen, ohne neu aufzunehmen.
+
 ## Barrierearm posten
 
 - Der Post-Text ist die Textfassung für Screenreader. Am besten sprichst du ihn wörtlich ein.
